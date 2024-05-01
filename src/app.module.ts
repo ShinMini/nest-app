@@ -1,12 +1,21 @@
 import { Module } from '@nestjs/common'
-import { AppController } from './app.controller'
-import { AppService } from './app.service'
-import { UserModule } from './user/user.module'
-import { AuthModule } from './auth/auth.module'
+
+// Importing custom modules
+import { UserModule } from './modules/user/user.module'
+import { MessageModule } from './modules/message/message.module'
+import { ChatModule } from './modules/chat/chat.module'
+import { ChatRoomModule } from './modules/chat-room/chat-room.module'
+import { ConfigModule } from '@config/configuration.module'
+import { AuthModule } from '@modules/auth/auth.module'
 
 @Module({
-  imports: [UserModule, AuthModule],
-  controllers: [AppController],
-  providers: [AppService],
+  imports: [
+    UserModule,
+    AuthModule,
+    ChatRoomModule,
+    ChatModule,
+    MessageModule,
+    ConfigModule,
+  ],
 })
 export class AppModule {}

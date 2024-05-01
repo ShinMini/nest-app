@@ -1,5 +1,6 @@
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-arm64-openssl-3.0.x"]
 }
 
 datasource db {
@@ -7,24 +8,246 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id            Int             @id @default(autoincrement())
+  role          Role            @default(USER)
+  loginVia      LoginVia        @default(EMAIL)
+  socialAccount SocialAccount[]
+  uuid          String          @unique @default(cuid())
+  password      String?         @default(cuid())
+  email         String          @unique
+  username      String?
+  nickname      String?         @unique
+  gender        Gender?
+  fcmToken      FcmToken[]
+  refreshToken  String?
+  // In the case of users, there is a rating, and different services and benefits can be provided depending on the rating.
+  grade         Grade           @default(NORMAL)
+  avatar        String          @default("https://avatar.iran.liara.run/public/boy")
+  Images        Image[]
+  profile       Profile?
+  chatRooms     ChatRoom[]      @relation("ChatRoomToUser")
+  messages      Message[]
+  orders        Order[]
+  reports       Report[]
+  registerAt    DateTime        @default(now())
+}
+
+model FcmToken {
+  id          Int    @id @default(autoincrement())
+  deviceName  String
+  type        String
+  deviceToken String
+  userUUID    String
+  User        User   @relation(fields: [userUUID], references: [uuid], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model SocialAccount {
+  id           Int      @id @default(autoincrement())
+  provider     LoginVia // (e.g. "GOOGLE", "KAKAO", "APPLE")
+  // For social login users, the uuid value is received (e.g. "GOOGLE" + "uuuid")
+  providerUUID String
+  // The uuid that users are granted when they first sign up
+  userUUID     String
+  user         User     @relation(fields: [userUUID], references: [uuid], onDelete: Cascade, onUpdate: Cascade)
+}
+
+model Image {
+  id       Int       @id @default(autoincrement())
+  // image's type e.g. jpg, png, gif..
+  mimeType String?
+  // specify the purpose of the iamge e.g. profile, profile-requested for approval by admin, post, etc.
+  type     ImageType @default(ETC)
+  // for aws s3 storate
+  key      String    @unique
+  url      String    @unique
+  // image's original name
+  caption  String?
+
+  totalLike Int @default(0)
+  views     Int @default(0)
+
+  ownerUUID   String
+  owner       User   @relation(fields: [ownerUUID], references: [uuid])
+  likeUserIds Int[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  expiresAt DateTime?
+}
+
+model Profile {
+  complete            Boolean   @default(false)
+  oneLineIntroduction String?   @db.VarChar(100)
+  mobile              String?   @unique @db.VarChar(30)
+  age                 Int?
+  birthday            DateTime?
+  height              Int?
+  address             String?   @db.VarChar(240)
+  company             String?   @db.VarChar(120)
+  jobTitle            String?   @db.VarChar(120)
+  location            String[]  @db.VarChar(240)
+  latitude            Float?
+  longitude           Float?
+  locationLastUpdated DateTime? @updatedAt @db.Date
+
+  userUUID String @unique
+  user     User   @relation(fields: [userUUID], references: [uuid], onDelete: Cascade, onUpdate: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ChatRoom {
+  id           Int     @id @default(autoincrement())
+  // Create a chat room through socket io, and create uuid of the chat room. -> uuid of the chat room is the id value of the chat room.
+  //! It will be used as a factor value for validation of access to chat rooms - based on 24.01.24
+  uuid         String  @unique @default(cuid())
+  thumbnail    String  @default("https://picsum.photos/200")
+  title        String?
+  notification Boolean @default(true)
+  lastMessage  String? @db.VarChar(500)
+
+  status       ChatRoomStatus @default(CREATED)
+  messages     Message[]
+  // About the users who joined the chat room
+  participants User[]         @relation("ChatRoomToUser")
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Message {
+  id Int @id @default(autoincrement())
+
+  senderUUID     String
+  senderNickname String?
+  sender         User    @relation(fields: [senderUUID], references: [uuid], onUpdate: Cascade, onDelete: Cascade)
+
+  context     String
+  unreadCount Int     @default(1)
+  mediaType   String? @default("TEXT")
+
+  chatRoomUUID String
+  chatRoom     ChatRoom @relation(fields: [chatRoomUUID], references: [uuid], onUpdate: Cascade, onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([chatRoomUUID, createdAt])
+}
+
+model Order {
+  id          Int         @id @default(autoincrement())
+  total       Int         @default(1)
+  status      OrderStatus @default(CREATED)
+  customerId  Int         @unique
+  customer    User        @relation(fields: [customerId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  productName String      @unique
+  product     Product     @relation(fields: [productName], references: [name])
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+}
+
+//!: Product information should be manageable by the administrator. -> Product information should be able to be added on the administrator page.
+model Product {
+  id          Int    @id @default(autoincrement())
+  name        String @unique
+  price       Int
+  description String
+
+  // Order info
+  Order Order?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Report {
+  id             Int          @id @default(autoincrement())
+  type           String       @default("ETC")
+  status         ReportStatus @default(PENDING)
+  // ID of the reported user
+  reporterId     Int          @unique
+  reporter       User         @relation(fields: [reporterId], references: [id], onUpdate: Cascade, onDelete: Cascade)
+  // ID of the reported user
+  reportedUserId Int          @unique
+  // Reasons for reporting
+  reason         String       @db.VarChar(500)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+}
+
+enum OrderStatus {
+  CREATED
+  // Waiting for payment approval -> Waiting for credit card company response
+  REQUESTED
+  // User cancels payment -> cancel payment
+  CANCELED
+  // SUCCESS after confirmation of entry after payment approval
+  APPROVED
+  // Payment Authorization X -> Credit Card Company Issues
+  REJECTED
+  // Payment request terminated. Waiting for compensation
+  PENDING
+  // Payment completed and compensation payment completed
+  SUCCESS
+  // Payment completed. However, compensation payment failed -> notification to administrator and refund required
+  FAILED
+  // TIMEOUT -> Payment window lasts more than 3 minutes
+  TIMEOUT
+}
+
+enum LoginVia {
+  EMAIL
+  KAKAO
+  GOOGLE
+  APPLE
+}
+
+enum ReportStatus {
+  PENDING
+  RESOLVED
+  REJECTED
+}
+
+enum ChatRoomStatus {
+  CREATED
+  // 데이트 날짜 및 장소 설정 대기중
+  PENDING
+  // 데이트 시작 3일전에 chat room status 변경
+  OPENED
+  // 데이트 종료 3일후에 chat room status 변경? -> //! 이부분은 논의 필요
+  CLOSED
+  REMOVED
+}
+
 enum Role {
   USER
   ADMIN
 }
 
-model User {
-  id       String   @id @default(cuid())
-  role    Role     @default(USER)
-  name     String?
-  email    String   @unique
-  password String   @db.VarChar(100)
-  profile  Profile?
+enum Grade {
+  NORMAL
+  VIP
+  SPECIAL
 }
 
-model Profile {
-  id     Int    @id
-  User   User   @relation(fields: [userId], references: [id])
-  userId String @unique
-  jobTitle String?  @db.VarChar(100)
-  mobile String? @db.VarChar(20)
+enum Gender {
+  MAN
+  WOMAN
+}
+
+enum ImageType {
+  PROFILE_IMAGE
+  PROFILE_CERTIFICATION
+
+  PROFILE_REQUESTED_IMAGE
+  PROFILE_REQUESTED_CERTIFICATION
+
+  MESSAGE_IMAGE
+  INSTANT_MESSAGE_IMAGE
+
+  ETC
 }

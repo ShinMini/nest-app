@@ -1,5 +1,9 @@
 module.exports = {
   parser: '@typescript-eslint/parser',
+  // auto format when save
+  'editor.codeActionsOnSave': {
+    'source.fixAll.eslint': true,
+  },
   parserOptions: {
     project: 'tsconfig.json',
     tsconfigRootDir: __dirname,
