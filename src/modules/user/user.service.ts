@@ -1,7 +1,8 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common'
-import { PrismaService } from '@prisma'
+import { Injectable } from '@nestjs/common'
+import { PrismaService } from '@root/prisma.service'
 import { User, Prisma, Profile } from '@prisma/client'
 import { errorTypeClassify } from '@utils/error-type-classify'
+
 @Injectable()
 export class UserService {
   constructor(private prisma: PrismaService) {}
@@ -15,11 +16,16 @@ export class UserService {
   }
 
   async findUserByUUID(uuid: string) {
-    return await this.prisma.user.findFirst({ where: { uuid }, include: { profile: true } })
+    return await this.prisma.user.findFirst({
+      where: { uuid },
+      include: { profile: true },
+    })
   }
   async findUserByEmail(email: string) {
-    return await this.prisma.user.findFirst({ where: { email }, include: { profile: true }})
-
+    return await this.prisma.user.findFirst({
+      where: { email },
+      include: { profile: true },
+    })
   }
 
   async findUsers(params: {

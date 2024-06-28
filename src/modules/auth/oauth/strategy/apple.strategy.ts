@@ -2,7 +2,7 @@ import { ExecutionContext, Inject, Injectable, Logger } from '@nestjs/common';
 import { AuthGuard, PassportStrategy } from '@nestjs/passport';
 import { Strategy, Profile } from '@arendajaelu/nestjs-passport-apple';
 import { ConfigService } from '@nestjs/config';
-import { LoginService } from '../login.service';
+import { OAuthService } from '../oauth.service';
 
 const APPLE_STRATEGY_NAME = 'apple';
 
@@ -12,7 +12,7 @@ export class AppleStrategy extends PassportStrategy(
   APPLE_STRATEGY_NAME,
 ) {
   constructor(
-    @Inject(LoginService) private readonly loginService: LoginService,
+    @Inject(OAuthService) private readonly oAuthService: OAuthService,
     @Inject(ConfigService) private readonly configService: ConfigService,
   ) {
     super({
@@ -46,7 +46,7 @@ export class AppleStrategy extends PassportStrategy(
       refreshToken: _refreshToken,
     };
 
-    const result = await this.loginService.validateUser(data);
+    const result = await this.oAuthService.validateUser(data);
     return result.success ? result.data : null;
   }
 }

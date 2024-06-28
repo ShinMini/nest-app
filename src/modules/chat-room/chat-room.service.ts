@@ -1,6 +1,6 @@
 // chat-room.service.ts
 import { Injectable } from '@nestjs/common'
-import { PrismaService } from '@prisma'
+import { PrismaService } from '@root/prisma.service'
 
 @Injectable()
 export class ChatRoomService {

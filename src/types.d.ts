@@ -4,8 +4,8 @@ declare interface IConfig {
   port: number
   database: IDBConfig
   jwt: IJwtConfig
-  encript: IEncryptConfig
-  openai: { apiKey: string }
+  bcrypt: IEncryptConfig
+  openAI: { apiKey: string }
   aws: IAwsConfig
   upload: IUploadConfig
   sessionSecret: string

@@ -7,20 +7,20 @@ import { JwtUtils } from '../jwt/jwt.service'
 import type { Response } from 'express'
 import axios from 'axios'
 import { errorTypeClassify } from '@utils/error-type-classify'
-import { PrismaService } from '@prisma'
+import { PrismaService } from '@root/prisma.service'
 import { LoginResult } from './constant'
 import { responseSchema } from '@constants/response-schema'
 
 @Injectable()
-export class LoginService {
+export class OAuthService {
   constructor(
     private readonly configService: ConfigService,
     private readonly encryptService: EncryptService,
     private readonly jwtUtils: JwtUtils,
-    private readonly prismaService: PrismaService,
+    private readonly @root/prisma.service: PrismaService,
     private readonly userService: UserService
   ) {}
-  private readonly logger = new Logger('LOGIN_SERVICE')
+  private readonly logger = new Logger('OAuthService')
   private readonly __DEV__ = this.configService.get('__DEV__')
   private debug(message: any, ...optionalParams: [...any, string?]) {
     this.__DEV__ && this.logger.debug(message, ...optionalParams)
@@ -126,7 +126,7 @@ export class LoginService {
       // 연동된 소셜아이디가 있는지 확인
       user =
         (
-          await this.prismaService.socialAccount.findFirst({
+          await this.@root/prisma.service.socialAccount.findFirst({
             where: {
               providerUUID: userUUID,
             },
@@ -183,9 +183,12 @@ export class LoginService {
         email: data.email,
         socialProvider: data.loginVia,
       })
+
+      const { accessToken, ...rest} = data;
+
       const password = await this.encryptService.hashing(userUUID)
       const newUser = await this.userService.createUser({
-        ...data,
+        ...rest,
         uuid: userUUID,
         password,
     

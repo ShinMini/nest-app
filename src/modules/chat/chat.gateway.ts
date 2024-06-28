@@ -7,7 +7,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
 import { Server, Socket } from 'socket.io'
-import { MessageService } from '@modules/message/message.service'
+import { MessageService } from './../message/message.service'
 
 @WebSocketGateway({
   namespace: '/chat',

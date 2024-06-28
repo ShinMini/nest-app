@@ -11,6 +11,7 @@ export interface ResErrorType extends api.FailRes {
 const logger = new Logger('errorTypeClassify')
 export const errorTypeClassify = (error: any): ResErrorType & Error => {
   const errName = `${error?.name}`.trim()
+  console.error('errorTypeClassify', errName)
   logger.error(error)
 
   if (!(error instanceof Error)) {

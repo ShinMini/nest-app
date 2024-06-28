@@ -12,7 +12,7 @@ export class EncryptService {
     this.configService.getOrThrow('bcrypt.algorithm');
   private readonly ENCRYPT_SALT = this.configService.getOrThrow('bcrypt.salt');
   private readonly ENCRYPT_KEY_PASSWORD =
-    this.configService.getOrThrow('bcrypt.privateKey');
+    this.configService.getOrThrow('bcrypt.keyPassword');
 
   private readonly key = scryptSync(
     this.ENCRYPT_KEY_PASSWORD,

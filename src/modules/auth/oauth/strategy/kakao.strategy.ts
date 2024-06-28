@@ -1,18 +1,19 @@
 import { ExecutionContext, Inject, Injectable, Logger } from '@nestjs/common';
 import { AuthGuard, PassportStrategy } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
-import { LoginService } from '../login.service';
+import { OAuthService } from '../oauth.service';
 import { Strategy, Profile } from 'passport-kakao';
 
 @Injectable()
 export class KakaoStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @Inject(LoginService) private readonly loginService: LoginService,
+    @Inject(OAuthService) private readonly oAuthService: OAuthService,
     @Inject(ConfigService) private readonly configService: ConfigService,
   ) {
     super({
       clientID: configService.get('KAKAO_CLIENT_ID'),
       callbackURL: configService.get('KAKAO_REDIRECT_URI'),
+      clientSecret: '',
     });
   }
 
@@ -45,7 +46,7 @@ export class KakaoStrategy extends PassportStrategy(Strategy) {
       refreshToken: _refreshToken,
     };
 
-    const result = await this.loginService.validateUser(data);
+    const result = await this.oAuthService.validateUser(data);
     const validity = result.success ? result.data : null;
     return validity;
   }

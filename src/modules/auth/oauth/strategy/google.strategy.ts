@@ -2,12 +2,12 @@ import { ExecutionContext, Inject, Injectable, Logger } from '@nestjs/common';
 import { AuthGuard, PassportStrategy } from '@nestjs/passport';
 import { Profile, Strategy } from 'passport-google-oauth20';
 import { ConfigService } from '@nestjs/config';
-import { LoginService } from '../login.service';
+import {  OAuthService } from '../oauth.service';
 
 @Injectable()
 export class GoogleStrategy extends PassportStrategy(Strategy) {
   constructor(
-    @Inject(LoginService) private readonly loginService: LoginService,
+    @Inject(OAuthService) private readonly oAuthService: OAuthService,
     @Inject(ConfigService) private readonly configService: ConfigService,
   ) {
     super({
@@ -43,7 +43,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy) {
       refreshToken,
     };
 
-    const result = await this.loginService.validateUser(data);
+    const result = await this.oAuthService.validateUser(data);
     return result.success ? result.data : null;
   }
 }

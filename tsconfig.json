@@ -20,12 +20,12 @@
     "noFallthroughCasesInSwitch": false,
     "resolveJsonModule": true,
     "paths": {
+      "@root/*": ["./src/*"],
       "@modules/*": ["./src/modules/*"],
       "@config/*": ["./src/config/*"],
       "@utils/*": ["./src/utils/*"],
       "@constants/*": ["./src/constants/*"],
-      "@types/*": ["./src/types/*"],
-      "@prisma": ["./src/prisma.service.ts"]
+      "@types/*": ["./src/types/*"]
     }
   },
   "include": ["src/types.d.ts", "src/**/*.ts", "src/types/*"]

@@ -135,7 +135,7 @@ model Message {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  @@index([chatRoomUUID, createdAt])
+  @index([chatRoomUUID, createdAt])
 }
 
 model Order {

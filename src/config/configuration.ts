@@ -28,12 +28,12 @@ export default () =>
         keyId: process.env.JWT_REFRESH_KEY_ID,
       },
     },
-    encript: {
+    bcrypt: {
       algorithm: process.env.ENCRYPT_ALGORITHM,
-      salt: process.env.ENCRYPT_SALT,
+      salt: '$2a$10$' + process.env.ENCRYPT_SALT,
       keyPassword: process.env.ENCRYPT_KEY_PASSWORD,
     },
-    openai: {
+    openAI: {
       apiKey: process.env.OPENAI_API_KEY,
     },
     aws: {
